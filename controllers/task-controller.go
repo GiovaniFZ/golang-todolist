@@ -2,6 +2,7 @@ package controllers
 
 import (
 	models "github/giovanifz/todolist-go/model"
+	"github/giovanifz/todolist-go/view"
 	"net/http"
 	"time"
 
@@ -33,5 +34,5 @@ func GetTasks(c *gin.Context) {
 		},
 	}
 
-	c.IndentedJSON(http.StatusOK, mockTasks)
+	c.IndentedJSON(http.StatusOK, view.TaskView(mockTasks))
 }
