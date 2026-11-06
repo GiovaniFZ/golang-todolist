@@ -1,7 +1,6 @@
 package view
 
 import (
-	"fmt"
 	models "github/giovanifz/todolist-go/model"
 	"time"
 
@@ -17,7 +16,6 @@ type TaskResponse struct {
 
 func TaskView(tasks []models.Task) gin.H {
 	response := make([]TaskResponse, 0, len(tasks))
-	fmt.Println(tasks)
 	for _, task := range tasks {
 		response = append(response, TaskResponse{
 			Description: task.Description,
