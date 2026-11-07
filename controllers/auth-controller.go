@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -13,6 +14,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 const (
@@ -35,7 +39,6 @@ func getSecret() ([]byte, error) {
 
 func GenerateAccessToken(id string) (string, error) {
 	secret, err := getSecret()
-	fmt.Println(secret)
 	if err != nil {
 		return "", err
 	}
@@ -91,8 +94,21 @@ func ValidateAccessToken(tokenString string) (*models.Claims, error) {
 	return claims, nil
 }
 
-func Login(c *gin.Context) {
-	var req models.User
+func HashPassword(password string) string {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	if err != nil {
+		panic("Could not hash password")
+	}
+	return string(bytes)
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
+func Login(c *gin.Context, db *gorm.DB) {
+	var req models.LoginRequest
 	if err := json.NewDecoder(c.Request.Body).Decode(&req); err != nil {
 		c.JSON(http.StatusBadRequest, view.AuthErrorView("Invalid body request"))
 		return
@@ -103,11 +119,54 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	ctx := context.Background()
+	user, err := gorm.G[models.User](db).Where("Email = ?", 1).First(ctx)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.AuthErrorView("User not found"))
+		return
+	}
+
+	match := CheckPasswordHash(req.Password, user.Password_Hash)
+
+	if !match {
+		c.JSON(http.StatusBadRequest, view.AuthErrorView("Password invalid"))
+		return
+	}
+
 	accessToken, err := GenerateAccessToken(req.Email)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.AuthErrorView(err.Error()))
 		return
 	}
 
+	c.JSON(http.StatusOK, view.AuthSuccessView(accessToken, expirationTime))
+}
+
+func SignUp(c *gin.Context, db *gorm.DB) {
+	var req models.RegisterRequest
+	if err := json.NewDecoder(c.Request.Body).Decode(&req); err != nil {
+		c.JSON(http.StatusBadRequest, view.AuthErrorView("Invalid body request"))
+		return
+	}
+
+	if req.Email == "" || req.Password == "" {
+		c.JSON(http.StatusBadRequest, view.AuthErrorView("Email and password were not provided"))
+		return
+	}
+
+	ctx := context.Background()
+	gorm.G[models.User](db).Create(ctx, &models.User{
+		Id:            uuid.NewString(),
+		Name:          req.Name,
+		Email:         req.Email,
+		Password_Hash: HashPassword(req.Password),
+	})
+
+	accessToken, err := GenerateAccessToken(req.Email)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.AuthErrorView(err.Error()))
+		return
+	}
 	c.JSON(http.StatusOK, view.AuthSuccessView(accessToken, expirationTime))
 }

@@ -3,8 +3,19 @@ package models
 import "github.com/golang-jwt/jwt/v5"
 
 type User struct {
-	Id       string
+	Id            string
+	Name          string
+	Email         string
+	Password_Hash string
+}
+
+type RegisterRequest struct {
 	Name     string
+	Email    string
+	Password string
+}
+
+type LoginRequest struct {
 	Email    string
 	Password string
 }

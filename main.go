@@ -15,10 +15,15 @@ func main() {
 		panic("Error when loading .env")
 	}
 
-	connection.ConnectDatabase()
+	db := connection.ConnectDatabase()
 
 	router.GET("/tasks", controllers.GetTasks)
-	router.POST("/login", controllers.Login)
+	router.POST("/login", func(c *gin.Context) {
+		controllers.Login(c, db)
+	})
+	router.POST("/sign-up", func(c *gin.Context) {
+		controllers.SignUp(c, db)
+	})
 
 	router.Run("localhost:8080")
 }
