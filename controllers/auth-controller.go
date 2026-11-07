@@ -120,7 +120,7 @@ func Login(c *gin.Context, db *gorm.DB) {
 	}
 
 	ctx := context.Background()
-	user, err := gorm.G[models.User](db).Where("Email = ?", 1).First(ctx)
+	user, err := gorm.G[models.User](db).Where("Email = ?", req.Email).First(ctx)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.AuthErrorView("User not found"))
@@ -156,6 +156,13 @@ func SignUp(c *gin.Context, db *gorm.DB) {
 	}
 
 	ctx := context.Background()
+	user, err := gorm.G[models.User](db).Where("Email = ?", req.Email).First(ctx)
+
+	if user.Email == req.Email {
+		c.JSON(http.StatusBadRequest, view.AuthErrorView("User already exists"))
+		return
+	}
+
 	gorm.G[models.User](db).Create(ctx, &models.User{
 		Id:            uuid.NewString(),
 		Name:          req.Name,
