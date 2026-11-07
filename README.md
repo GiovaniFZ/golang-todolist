@@ -4,5 +4,6 @@ This is my personal project using Go Language. The idea is to create a todo list
 # Useful commands
 ```shell
 go mod init todo-list
-go get -u github.com/gin-gonic/gin
+go get -u path/from/package
+go mod tidy
 ```
