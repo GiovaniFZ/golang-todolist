@@ -120,6 +120,7 @@ func SignUp(c *gin.Context, db *gorm.DB) {
 		Id:            uuid.NewString(),
 		Name:          req.Name,
 		Email:         req.Email,
+		Role:          models.Member,
 		Password_Hash: HashPassword(req.Password),
 	})
 

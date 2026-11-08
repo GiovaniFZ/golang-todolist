@@ -1,23 +1,34 @@
 package models
 
-import "github.com/golang-jwt/jwt/v5"
+import (
+	"github.com/golang-jwt/jwt/v5"
+)
+
+type roles string
+
+const (
+	Admin  roles = "admin"
+	Member roles = "member"
+)
 
 type User struct {
-	Id            string
-	Name          string
-	Email         string
-	Password_Hash string
+	Id            string `gorm:"primaryKey" json:"id"`
+	Name          string `gorm:"not null" json:"name"`
+	Email         string `gorm:"unique;not null" json:"email"`
+	Role          roles  `gorm:"not null" json:"role"`
+	Password_Hash string `gorm:"not null"`
+	Tasks         []Task `gorm:"foreignKey:UserId"`
 }
 
 type RegisterRequest struct {
-	Name     string
-	Email    string
-	Password string
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type LoginRequest struct {
-	Email    string
-	Password string
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type Claims struct {
