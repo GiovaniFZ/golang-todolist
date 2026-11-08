@@ -4,16 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	models "github/giovanifz/todolist-go/model"
+	"github/giovanifz/todolist-go/model/repositories"
 	"github/giovanifz/todolist-go/view"
 	"net/http"
 
 	"github.com/google/uuid"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-func GetUserTasks(c *gin.Context, db *gorm.DB) {
+func GetUserTasks(c *gin.Context, userRepository repositories.UserRepository, taskRepository repositories.TaskRepository) {
 	ctx := context.Background()
 	claim, exists := c.Get("userClaims")
 	if !exists {
@@ -21,13 +21,13 @@ func GetUserTasks(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	user, err := gorm.G[models.User](db).Where("Id = ?", claim.(*models.Claims).Subject).First(ctx)
+	user, err := userRepository.FindByID(ctx, claim.(*models.Claims).Subject)
 	if err != nil {
 		c.JSON(404, view.ErrorView("User not found"))
 		return
 	}
 
-	tasks, err := gorm.G[models.Task](db).Where("User_Id = ?", user.Id).Find(ctx)
+	tasks, err := taskRepository.FindByUserID(ctx, user.Id)
 	if err != nil {
 		c.JSON(404, view.ErrorView("User tasks not found"))
 		return
@@ -36,7 +36,7 @@ func GetUserTasks(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusOK, view.TaskView(tasks))
 }
 
-func CreateUserTask(c *gin.Context, db *gorm.DB) {
+func CreateUserTask(c *gin.Context, userRepository repositories.UserRepository, taskRepository repositories.TaskRepository) {
 	ctx := context.Background()
 	claim, exists := c.Get("userClaims")
 	if !exists {
@@ -55,20 +55,22 @@ func CreateUserTask(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	user, err := gorm.G[models.User](db).Where("Id = ?", claim.(*models.Claims).Subject).First(ctx)
+	user, err := userRepository.FindByID(ctx, claim.(*models.Claims).Subject)
 	if err != nil {
 		c.JSON(404, view.ErrorView("User not found"))
 		return
 	}
 
-	gorm.G[models.Task](db).Create(ctx, &models.Task{
-		ID:          uuid.NewString(),
+	newTaskId := uuid.NewString()
+	newTask := &models.Task{
+		ID:          newTaskId,
 		UserId:      user.Id,
 		Name:        req.Name,
 		Description: req.Description,
 		StartsAt:    req.StartsAt,
 		EndsAt:      req.EndsAt,
-	})
+	}
+	taskRepository.Create(ctx, newTask)
 
 	c.Status(http.StatusCreated)
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	models "github/giovanifz/todolist-go/model"
+	"github/giovanifz/todolist-go/model/repositories"
 	"github/giovanifz/todolist-go/view"
 	"net/http"
 	"os"
@@ -14,7 +15,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 const (
@@ -60,7 +60,7 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-func Login(c *gin.Context, db *gorm.DB) {
+func Login(c *gin.Context, userRepository repositories.UserRepository) {
 	var req models.LoginRequest
 	if err := json.NewDecoder(c.Request.Body).Decode(&req); err != nil {
 		c.JSON(http.StatusBadRequest, view.ErrorView("Invalid body request"))
@@ -73,7 +73,7 @@ func Login(c *gin.Context, db *gorm.DB) {
 	}
 
 	ctx := context.Background()
-	user, err := gorm.G[models.User](db).Where("Email = ?", req.Email).First(ctx)
+	user, err := userRepository.FindByEmail(ctx, req.Email)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.ErrorView("User not found"))
@@ -96,7 +96,7 @@ func Login(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusOK, view.AuthSuccessView(accessToken, expirationTime))
 }
 
-func SignUp(c *gin.Context, db *gorm.DB) {
+func SignUp(c *gin.Context, userRepository repositories.UserRepository) {
 	var req models.RegisterRequest
 	if err := json.NewDecoder(c.Request.Body).Decode(&req); err != nil {
 		c.JSON(http.StatusBadRequest, view.ErrorView("Invalid body request"))
@@ -109,7 +109,7 @@ func SignUp(c *gin.Context, db *gorm.DB) {
 	}
 
 	ctx := context.Background()
-	user, err := gorm.G[models.User](db).Where("Email = ?", req.Email).First(ctx)
+	user, err := userRepository.FindByEmail(ctx, req.Email)
 
 	if user.Email == req.Email {
 		c.JSON(http.StatusBadRequest, view.ErrorView("User already exists"))
@@ -117,13 +117,17 @@ func SignUp(c *gin.Context, db *gorm.DB) {
 	}
 
 	newUserId := uuid.NewString()
-	gorm.G[models.User](db).Create(ctx, &models.User{
+	passwordHash := HashPassword(req.Password)
+
+	var newUser = models.User{
 		Id:            newUserId,
-		Name:          req.Name,
-		Email:         req.Email,
+		Name:          user.Name,
+		Email:         user.Email,
 		Role:          models.Member,
-		Password_Hash: HashPassword(req.Password),
-	})
+		Password_Hash: passwordHash,
+	}
+
+	userRepository.Create(ctx, &newUser)
 
 	accessToken, err := GenerateAccessToken(newUserId)
 	if err != nil {
