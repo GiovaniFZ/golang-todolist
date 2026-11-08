@@ -26,7 +26,13 @@ func main() {
 	})
 	router.Use(middlewares.GinJWTMiddleware())
 	{
-		router.GET("/tasks", controllers.GetTasks)
+		router.GET("/tasks", func(c *gin.Context) {
+			controllers.GetUserTasks(c, db)
+		})
+
+		router.POST("/tasks", func(c *gin.Context) {
+			controllers.CreateUserTask(c, db)
+		})
 	}
 
 	router.Run("localhost:8080")

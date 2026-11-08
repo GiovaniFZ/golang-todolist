@@ -21,6 +21,20 @@ Content-Type: application/json
 @authToken = {{Login.response.body.access_token}}
 ###
 
+# @name Create Task
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "Name": "Birthday",
+    "Description": "My mother's birthday",
+    "StartsAt": "2027-07-04T16:31:28.870Z",
+    "EndsAt": "2026-07-05T18:31:28.870Z"
+}
+
+###
+
 # @name Get Tasks
 GET {{baseUrl}}/tasks
 Authorization: Bearer {{authToken}}
