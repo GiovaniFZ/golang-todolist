@@ -87,7 +87,7 @@ func Login(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	accessToken, err := GenerateAccessToken(req.Email)
+	accessToken, err := GenerateAccessToken(user.Id)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.AuthErrorView(err.Error()))
 		return
@@ -116,15 +116,16 @@ func SignUp(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
+	newUserId := uuid.NewString()
 	gorm.G[models.User](db).Create(ctx, &models.User{
-		Id:            uuid.NewString(),
+		Id:            newUserId,
 		Name:          req.Name,
 		Email:         req.Email,
 		Role:          models.Member,
 		Password_Hash: HashPassword(req.Password),
 	})
 
-	accessToken, err := GenerateAccessToken(req.Email)
+	accessToken, err := GenerateAccessToken(newUserId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.AuthErrorView(err.Error()))
 		return
