@@ -63,12 +63,12 @@ func CheckPasswordHash(password, hash string) bool {
 func Login(c *gin.Context, db *gorm.DB) {
 	var req models.LoginRequest
 	if err := json.NewDecoder(c.Request.Body).Decode(&req); err != nil {
-		c.JSON(http.StatusBadRequest, view.AuthErrorView("Invalid body request"))
+		c.JSON(http.StatusBadRequest, view.ErrorView("Invalid body request"))
 		return
 	}
 
 	if req.Email == "" || req.Password == "" {
-		c.JSON(http.StatusBadRequest, view.AuthErrorView("Email and password were not provided"))
+		c.JSON(http.StatusBadRequest, view.ErrorView("Email and password were not provided"))
 		return
 	}
 
@@ -76,20 +76,20 @@ func Login(c *gin.Context, db *gorm.DB) {
 	user, err := gorm.G[models.User](db).Where("Email = ?", req.Email).First(ctx)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, view.AuthErrorView("User not found"))
+		c.JSON(http.StatusBadRequest, view.ErrorView("User not found"))
 		return
 	}
 
 	match := CheckPasswordHash(req.Password, user.Password_Hash)
 
 	if !match {
-		c.JSON(http.StatusBadRequest, view.AuthErrorView("Password invalid"))
+		c.JSON(http.StatusBadRequest, view.ErrorView("Password invalid"))
 		return
 	}
 
 	accessToken, err := GenerateAccessToken(user.Id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, view.AuthErrorView(err.Error()))
+		c.JSON(http.StatusBadRequest, view.ErrorView(err.Error()))
 		return
 	}
 
@@ -99,12 +99,12 @@ func Login(c *gin.Context, db *gorm.DB) {
 func SignUp(c *gin.Context, db *gorm.DB) {
 	var req models.RegisterRequest
 	if err := json.NewDecoder(c.Request.Body).Decode(&req); err != nil {
-		c.JSON(http.StatusBadRequest, view.AuthErrorView("Invalid body request"))
+		c.JSON(http.StatusBadRequest, view.ErrorView("Invalid body request"))
 		return
 	}
 
 	if req.Email == "" || req.Password == "" {
-		c.JSON(http.StatusBadRequest, view.AuthErrorView("Email and password were not provided"))
+		c.JSON(http.StatusBadRequest, view.ErrorView("Email and password were not provided"))
 		return
 	}
 
@@ -112,7 +112,7 @@ func SignUp(c *gin.Context, db *gorm.DB) {
 	user, err := gorm.G[models.User](db).Where("Email = ?", req.Email).First(ctx)
 
 	if user.Email == req.Email {
-		c.JSON(http.StatusBadRequest, view.AuthErrorView("User already exists"))
+		c.JSON(http.StatusBadRequest, view.ErrorView("User already exists"))
 		return
 	}
 
@@ -127,7 +127,7 @@ func SignUp(c *gin.Context, db *gorm.DB) {
 
 	accessToken, err := GenerateAccessToken(newUserId)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, view.AuthErrorView(err.Error()))
+		c.JSON(http.StatusBadRequest, view.ErrorView(err.Error()))
 		return
 	}
 	c.JSON(http.StatusOK, view.AuthSuccessView(accessToken, expirationTime))

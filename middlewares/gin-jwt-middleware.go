@@ -20,13 +20,13 @@ func GinJWTMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, view.AuthErrorView("Missing Headers"))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, view.ErrorView("Missing Headers"))
 			return
 		}
 
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, view.AuthErrorView("Wrong token format"))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, view.ErrorView("Wrong token format"))
 			return
 		}
 
@@ -41,7 +41,7 @@ func GinJWTMiddleware() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, view.AuthErrorView("Invalid or expired token"))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, view.ErrorView("Invalid or expired token"))
 			return
 		}
 
