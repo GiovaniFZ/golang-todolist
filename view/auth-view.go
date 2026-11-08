@@ -14,8 +14,8 @@ func AuthErrorView(error string) gin.H {
 
 func AuthSuccessView(token string, expiresIn time.Duration) gin.H {
 	return gin.H{
-		"AccessToken": token,
-		"TokenType":   "Bearer",
-		"ExpiresIn":   expiresIn,
+		"access_token": token,
+		"token_type":   "Bearer",
+		"expires_in":   expiresIn,
 	}
 }
