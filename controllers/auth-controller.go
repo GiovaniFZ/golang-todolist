@@ -2,9 +2,7 @@ package controllers
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	models "github/giovanifz/todolist-go/model"
 	"github/giovanifz/todolist-go/view"
@@ -25,24 +23,8 @@ const (
 	expirationTime = 15 * time.Minute
 )
 
-func getSecret() ([]byte, error) {
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		return nil, errors.New("JWT Secret missing")
-	}
-	key, err := base64.StdEncoding.DecodeString(secret)
-	if err != nil || len(key) < 32 {
-		return nil, errors.New("JWT_SECRET should be Base64 with 32 bytes")
-	}
-	return key, nil
-}
-
 func GenerateAccessToken(id string) (string, error) {
-	secret, err := getSecret()
-	if err != nil {
-		return "", err
-	}
-
+	secret := os.Getenv("JWT_SECRET")
 	now := time.Now()
 
 	claims := models.Claims{
@@ -58,40 +40,11 @@ func GenerateAccessToken(id string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString(secret)
+	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
-		return "", fmt.Errorf("Error: %w", err)
+		return "", err
 	}
-
 	return tokenString, nil
-}
-
-func ValidateAccessToken(tokenString string) (*models.Claims, error) {
-	secret, err := getSecret()
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := jwt.ParseWithClaims(tokenString, &models.Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return secret, nil
-	}, jwt.WithValidMethods([]string{"HS256"}),
-		jwt.WithExpirationRequired(),
-		jwt.WithIssuer(tokenIssuer),
-		jwt.WithAudience(accessAudience))
-
-	if err != nil {
-		if errors.Is(err, jwt.ErrTokenExpired) {
-			return nil, errors.New("Expired token")
-		}
-		return nil, errors.New("Expired token")
-	}
-
-	claims, ok := token.Claims.(*models.Claims)
-	if !ok || !token.Valid {
-		return nil, errors.New("Invalid token")
-	}
-
-	return claims, nil
 }
 
 func HashPassword(password string) string {

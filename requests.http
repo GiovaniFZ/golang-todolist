@@ -18,8 +18,10 @@ Content-Type: application/json
     "Email": "john@example.com",
     "Password": "12345"
 }
+@authToken = {{Login.response.body.AccessToken}}
 ###
 
 # @name Get Tasks
 GET {{baseUrl}}/tasks
+Authorization: Bearer {{authToken}}
 ###
