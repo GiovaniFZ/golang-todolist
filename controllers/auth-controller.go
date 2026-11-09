@@ -104,7 +104,7 @@ func SignUp(c *gin.Context, userRepository repositories.UserRepository) {
 	}
 
 	if req.Name == "" || req.Email == "" || req.Password == "" {
-		c.JSON(http.StatusBadRequest, view.ErrorView("Email and password were not provided"))
+		c.JSON(http.StatusBadRequest, view.ErrorView("Email, password and name are obligatory"))
 		return
 	}
 

@@ -7,3 +7,8 @@ go mod init todo-list
 go get -u path/from/package
 go mod tidy
 ```
+
+# Testing
+```shell
+go test github/giovanifz/todolist-go/controllers/tests
+```
