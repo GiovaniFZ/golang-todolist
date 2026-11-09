@@ -103,7 +103,7 @@ func SignUp(c *gin.Context, userRepository repositories.UserRepository) {
 		return
 	}
 
-	if req.Email == "" || req.Password == "" {
+	if req.Name == "" || req.Email == "" || req.Password == "" {
 		c.JSON(http.StatusBadRequest, view.ErrorView("Email and password were not provided"))
 		return
 	}
@@ -111,7 +111,7 @@ func SignUp(c *gin.Context, userRepository repositories.UserRepository) {
 	ctx := context.Background()
 	user, err := userRepository.FindByEmail(ctx, req.Email)
 
-	if user.Email == req.Email {
+	if user != nil && user.Email == req.Email {
 		c.JSON(http.StatusBadRequest, view.ErrorView("User already exists"))
 		return
 	}
@@ -121,8 +121,8 @@ func SignUp(c *gin.Context, userRepository repositories.UserRepository) {
 
 	var newUser = models.User{
 		Id:            newUserId,
-		Name:          user.Name,
-		Email:         user.Email,
+		Name:          req.Name,
+		Email:         req.Email,
 		Role:          models.Member,
 		Password_Hash: passwordHash,
 	}
