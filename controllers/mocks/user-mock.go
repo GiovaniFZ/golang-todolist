@@ -14,3 +14,8 @@ var MockRegisterRequest = models.RegisterRequest{
 	Email:    "john.doe@example.com",
 	Password: "password123",
 }
+
+var MockLoginRequest = models.LoginRequest{
+	Email:    "john.doe@example.com",
+	Password: "password123",
+}
