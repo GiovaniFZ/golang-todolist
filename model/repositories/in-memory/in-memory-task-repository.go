@@ -57,9 +57,43 @@ func (r *inMemoryTaskRepository) FindByUserID(ctx context.Context, userID string
 	tasks := make([]models.Task, 0)
 	for _, taskID := range r.taskIDs {
 		task := r.tasks[taskID]
-		if task.UserId == userID {
+		if task.UserID == userID {
 			tasks = append(tasks, task)
 		}
 	}
 	return tasks, nil
+}
+
+func (r *inMemoryTaskRepository) UpdateByID(ctx context.Context, task *models.Task) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if task == nil {
+		return errNilTask
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, exists := r.tasks[task.ID]; !exists {
+		return errors.New("task not found")
+	}
+
+	r.tasks[task.ID] = *task
+	return nil
+}
+
+func (r *inMemoryTaskRepository) FindByID(ctx context.Context, id string) (*models.Task, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	task, exists := r.tasks[id]
+	if !exists {
+		return nil, errors.New("task not found")
+	}
+	return &task, nil
 }

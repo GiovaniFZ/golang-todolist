@@ -17,8 +17,7 @@ func NewGormTaskRepository(db *gorm.DB) repositories.TaskRepository {
 }
 
 func (r *gormTaskRepository) Create(ctx context.Context, task *models.Task) error {
-	gorm.G[models.Task](r.db).Create(ctx, task)
-	if err := r.db.WithContext(ctx).Create(task).Error; err != nil {
+	if err := gorm.G[models.Task](r.db).Create(ctx, task); err != nil {
 		return err
 	}
 	return nil
@@ -31,4 +30,20 @@ func (r *gormTaskRepository) FindByUserID(ctx context.Context, userId string) ([
 		return nil, err
 	}
 	return tasks, nil
+}
+
+func (r *gormTaskRepository) FindByID(ctx context.Context, id string) (*models.Task, error) {
+	task, err := gorm.G[models.Task](r.db).Where("Id = ?", id).First(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &task, nil
+}
+
+func (r *gormTaskRepository) UpdateByID(ctx context.Context, task *models.Task) error {
+	_, err := gorm.G[models.Task](r.db).
+		Where("id = ?", task.ID).
+		Select("Name", "Description", "StartsAt", "EndsAt").
+		Updates(ctx, *task)
+	return err
 }

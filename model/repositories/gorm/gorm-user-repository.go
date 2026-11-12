@@ -33,7 +33,6 @@ func (r *gormUserRepository) FindByEmail(ctx context.Context, email string) (*mo
 }
 
 func (r *gormUserRepository) Create(ctx context.Context, user *models.User) error {
-	gorm.G[models.User](r.db).Create(ctx, user)
 	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
 		return err
 	}

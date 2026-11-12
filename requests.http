@@ -16,7 +16,7 @@ POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-    "Email": "john@example.com",
+    "Email": "john@example2.com",
     "Password": "12345"
 }
 @authToken = {{Login.response.body.access_token}}
@@ -39,4 +39,19 @@ Authorization: Bearer {{authToken}}
 # @name Get Tasks
 GET {{baseUrl}}/tasks
 Authorization: Bearer {{authToken}}
+###
+@taskId = cd0dc3e8-a14c-45ab-bcc3-9bcd413398f3
+
+# @name Update Task
+PATCH {{baseUrl}}/tasks/{{taskId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "Name": "Updated Birthday",
+    "Description": "My mother's updated birthday",
+    "StartsAt": "2027-07-04T16:31:28.870Z",
+    "EndsAt": "2026-07-05T18:31:28.870Z"
+}
+
 ###

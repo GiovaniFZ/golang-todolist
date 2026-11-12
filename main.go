@@ -22,7 +22,7 @@ func main() {
 	userRepository := gorm.NewGormUserRepository(db)
 	taskRepository := gorm.NewGormTaskRepository(db)
 
-router.POST("/login", func(c *gin.Context) {
+	router.POST("/login", func(c *gin.Context) {
 		controllers.Login(c, userRepository)
 	})
 	router.POST("/sign-up", func(c *gin.Context) {
@@ -36,6 +36,10 @@ router.POST("/login", func(c *gin.Context) {
 
 		router.POST("/tasks", func(c *gin.Context) {
 			controllers.CreateUserTask(c, userRepository, taskRepository)
+		})
+
+		router.PATCH("/tasks/:id", func(c *gin.Context) {
+			controllers.UpdateUserTask(c, userRepository, taskRepository)
 		})
 	}
 
