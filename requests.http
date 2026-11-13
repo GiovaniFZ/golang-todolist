@@ -55,3 +55,9 @@ Authorization: Bearer {{authToken}}
 }
 
 ###
+
+# @name Delete Task
+DELETE {{baseUrl}}/tasks/{{taskId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+###

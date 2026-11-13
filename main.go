@@ -41,6 +41,10 @@ func main() {
 		router.PATCH("/tasks/:id", func(c *gin.Context) {
 			controllers.UpdateUserTask(c, userRepository, taskRepository)
 		})
+
+		router.DELETE("/tasks/:id", func(c *gin.Context) {
+			controllers.DeleteUserTask(c, userRepository, taskRepository)
+		})
 	}
 
 	router.Run("localhost:8080")

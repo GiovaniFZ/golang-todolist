@@ -97,3 +97,20 @@ func (r *inMemoryTaskRepository) FindByID(ctx context.Context, id string) (*mode
 	}
 	return &task, nil
 }
+
+func (r *inMemoryTaskRepository) Delete(ctx context.Context, id string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	_, exists := r.tasks[id]
+	if !exists {
+		return errors.New("task not found")
+	}
+
+	delete(r.tasks, id)
+	return nil
+}

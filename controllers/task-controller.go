@@ -124,3 +124,43 @@ func UpdateUserTask(c *gin.Context, userRepository repositories.UserRepository, 
 
 	c.Status(http.StatusOK)
 }
+
+func DeleteUserTask(c *gin.Context, userRepository repositories.UserRepository, taskRepository repositories.TaskRepository) {
+	ctx := context.Background()
+	claim, exists := c.Get("userClaims")
+	if !exists {
+		c.JSON(404, view.ErrorView("userClaims not found"))
+		return
+	}
+
+	user, err := userRepository.FindByID(ctx, claim.(*models.Claims).Subject)
+	if err != nil {
+		c.JSON(404, view.ErrorView("User not found"))
+		return
+	}
+
+	taskId := c.Param("id")
+	if taskId == "" {
+		c.JSON(http.StatusBadRequest, view.ErrorView("Task ID is required"))
+		return
+	}
+
+	task, err := taskRepository.FindByID(ctx, taskId)
+	if err != nil {
+		c.JSON(400, view.ErrorView("Task with id "+taskId+" not found"))
+		return
+	}
+
+	if task.UserID != user.Id {
+		c.JSON(400, view.ErrorView("You do not have permission to delete this task."))
+		return
+	}
+
+	err = taskRepository.Delete(ctx, taskId)
+	if err != nil {
+		c.JSON(400, view.ErrorView("Unable to delete task with id "+taskId))
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

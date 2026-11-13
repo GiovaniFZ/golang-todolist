@@ -124,3 +124,55 @@ func TestUpdateUserTask(t *testing.T) {
 		t.Errorf("Expected status %d, received status %d", http.StatusOK, c.Writer.Status())
 	}
 }
+
+func TestDeleteUserTask(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	taskRepository := in_memory.NewInMemoryTaskRepository()
+	userRepository := in_memory.NewInMemoryUserRepository()
+
+	c, _ := gin.CreateTestContext(w)
+	password_hash := controllers.HashPassword(mocks.MockLoginRequest.Password)
+	user := models.User{
+		Name:          mocks.MockRegisterRequest.Name,
+		Email:         mocks.MockRegisterRequest.Email,
+		Role:          "user",
+		Tasks:         []models.Task{},
+		Password_Hash: password_hash,
+	}
+
+	taskId := uuid.NewString()
+	task := models.Task{
+		ID:          taskId,
+		Name:        mocks.MockTask.Name,
+		Description: mocks.MockTask.Description,
+		UserID:      user.Id,
+	}
+	taskRepository.Create(
+		context.Background(),
+		&task,
+	)
+
+	userRepository.Create(
+		context.Background(),
+		&user,
+	)
+	claims := &models.Claims{
+		Subject: user.Id,
+	}
+	c.Set("userClaims", claims)
+
+	c.Request = httptest.NewRequest(
+		http.MethodDelete,
+		"/tasks/",
+		nil,
+	)
+
+	c.Params = append(c.Params, gin.Param{Key: "id", Value: taskId})
+	controllers.DeleteUserTask(c, userRepository, taskRepository)
+
+	if c.Writer.Status() != http.StatusNoContent {
+		t.Errorf("Expected status %d, received status %d", http.StatusOK, c.Writer.Status())
+	}
+}

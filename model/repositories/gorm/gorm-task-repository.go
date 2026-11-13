@@ -47,3 +47,11 @@ func (r *gormTaskRepository) UpdateByID(ctx context.Context, task *models.Task) 
 		Updates(ctx, *task)
 	return err
 }
+
+func (r *gormTaskRepository) Delete(ctx context.Context, id string) error {
+	_, err := gorm.G[models.Task](r.db).Where("Id = ?", id).Delete(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
